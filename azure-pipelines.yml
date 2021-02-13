@@ -14,11 +14,13 @@ variables:
 
 steps:
 - task: UseDotNet@2
+  displayName: Install .NET 5.0.x
   inputs:
     packageType: 'sdk'
     version: '5.0.x'
 
 - task: DotNetCoreCLI@2
+  displayName: Publish project
   inputs:
     command: publish
     publishWebProjects: True
@@ -26,6 +28,7 @@ steps:
     zipAfterPublish: true
     
 - task: AzureRmWebAppDeployment@4
+  displayName: Deploy to Azure
   inputs:
     ConnectionType: 'AzureRM'
     azureSubscription: 'Pay-As-You-Go(5a65a64c-b878-482f-83b2-85a346e2427c)'
