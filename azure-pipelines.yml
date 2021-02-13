@@ -13,14 +13,14 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
-- script: dotnet build --configuration $(buildConfiguration)
+- script: dotnet build src --configuration $(buildConfiguration)
   displayName: 'dotnet build $(buildConfiguration)'
 
 - task: DotNetCoreCLI@2
   inputs:
     command: publish
     publishWebProjects: True
-    arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+    arguments: ' src --configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
     zipAfterPublish: true
     
 - task: AzureRmWebAppDeployment@4
@@ -29,4 +29,5 @@ steps:
     azureSubscription: 'Pay-As-You-Go(5a65a64c-b878-482f-83b2-85a346e2427c)'
     appType: 'webApp'
     WebAppName: 'echo-me'
-    packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.zip'
+    
+    packageForLinux: '$(Build.ArtifactStagingDirectory)/**/*.zip'
