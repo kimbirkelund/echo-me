@@ -25,7 +25,7 @@ steps:
   inputs:
     command: publish
     publishWebProjects: True
-    arguments: ' src --configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+    arguments: ' --configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
     zipAfterPublish: true
     
 - task: AzureRmWebAppDeployment@4
