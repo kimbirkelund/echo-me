@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace echo
 {
@@ -14,29 +15,25 @@ namespace echo
         public IConfiguration Configuration { get; }
 
         public Startup(IConfiguration configuration)
-        {
-            Configuration = configuration;
-        }
+            => Configuration = configuration;
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
-            {
                 app.UseDeveloperExceptionPage();
-            }
 
             var contents = new ConcurrentDictionary<string, string>();
 
-            app.Use(async (ctx, next) =>
+            app.Use(async (ctx, _) =>
                     {
-                        switch (ctx.Request.Method?.ToLowerInvariant())
+                        switch (ctx.Request.Method.ToLowerInvariant())
                         {
                             case "get":
                                 ctx.Response.StatusCode = 200;
                                 ctx.Response.ContentType = "text/plain";
 
-                                using (var writer = new StreamWriter(ctx.Response.Body))
+                                await using (var writer = new StreamWriter(ctx.Response.Body))
                                 {
                                     await writer.WriteAsync(contents.GetValueOrDefault(ctx.Request.GetEncodedPathAndQuery()))
                                                 .ConfigureAwait(false);
