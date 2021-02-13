@@ -1,5 +1,5 @@
-﻿using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System;
+using System.Collections.Concurrent;
 using System.IO;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -23,32 +23,35 @@ namespace echo
             if (env.IsDevelopment())
                 app.UseDeveloperExceptionPage();
 
-            var contents = new ConcurrentDictionary<string, string>();
+            var contents = new ConcurrentDictionary<string, Item>();
 
             app.Use(async (ctx, _) =>
                     {
+                        var key = ctx.Request.GetEncodedPathAndQuery();
+
                         switch (ctx.Request.Method.ToLowerInvariant())
                         {
                             case "get":
-                                ctx.Response.StatusCode = 200;
-                                ctx.Response.ContentType = "text/plain";
-
-                                await using (var writer = new StreamWriter(ctx.Response.Body))
+                                if (contents.TryGetValue(key, out var item))
                                 {
-                                    await writer.WriteAsync(contents.GetValueOrDefault(ctx.Request.GetEncodedPathAndQuery()))
-                                                .ConfigureAwait(false);
+                                    var (data, contentType) = item;
+
+                                    ctx.Response.StatusCode = 200;
+                                    ctx.Response.ContentType = contentType;
+
+                                    await ctx.Response.BodyWriter.WriteAsync(data);
                                 }
+                                else
+                                    ctx.Response.StatusCode = 404;
 
                                 break;
 
                             case "post":
                                 ctx.Response.StatusCode = 201;
 
-                                using (var reader = new StreamReader(ctx.Request.Body))
-                                {
-                                    contents[ctx.Request.GetEncodedPathAndQuery()] = await reader.ReadToEndAsync()
-                                                                                                 .ConfigureAwait(false);
-                                }
+                                var stream = new MemoryStream();
+                                await ctx.Request.BodyReader.CopyToAsync(stream);
+                                contents[key] = new Item(new ReadOnlyMemory<byte>(stream.ToArray()), ctx.Request.ContentType);
 
                                 break;
 
