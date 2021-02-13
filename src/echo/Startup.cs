@@ -48,6 +48,7 @@ namespace echo
 
                             case "post":
                                 ctx.Response.StatusCode = 201;
+                                ctx.Response.ContentType = "text/plain";
 
                                 var stream = new MemoryStream();
                                 await ctx.Request.BodyReader.CopyToAsync(stream);
